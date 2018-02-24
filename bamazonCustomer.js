@@ -12,7 +12,6 @@ var connection = mysql.createConnection({
 connection.connect(function(err){
     if(err) throw err;
     console.log("connected as id " + connection.threadId);
-    //read();
     pick();
 });
 
@@ -65,6 +64,7 @@ function pick(){
                     function(err,res){
                         if(err) throw err;
                         console.log(`You've spent ${choseItem.price * answer.quantity} dollars on ${choseItem.product_name}`);
+                        pick();
                     }
                 )
             }
