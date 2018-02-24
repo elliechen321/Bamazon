@@ -69,7 +69,8 @@ function pick(){
                 )
             }
             else {
-                console.log("Insufficient Quantity! Please choose a different item.")
+                console.log("Insufficient Quantity! Please choose a different item.");
+                pick();
             }
         })
     })
