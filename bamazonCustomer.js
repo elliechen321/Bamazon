@@ -12,36 +12,65 @@ var connection = mysql.createConnection({
 connection.connect(function(err){
     if(err) throw err;
     console.log("connected as id " + connection.threadId);
+    //read();
+    pick();
 });
 
-function read(){
-    var query = connection.query(
-        "SELECT * FROM products", function(err,res){
-            if(err) throw err;
-            res.forEach(function(x){
-                console.log(`Items for sale: ${x.item_id} ${x.product_name} Listed Price: ${x.price} dollars`);
-            })
-        }
-    )
-    console.log(query.sql);
-};
-read();
 function pick(){
-    inquirer
-     .prompt([
-         {
-            type:"input",
-            message: "What's the ID of the product you'd like to purchase?",
-            name: "productId"
-         },
-         {
-             type: "input",
-             message: "How many do you want?",
-             name: "quantity"
-         }
-     ])
-     .then(function(answer){
-
-     }
-    )
+    connection.query("SELECT * FROM products",function(err,res){
+        if(err)throw err;
+        inquirer
+        .prompt([
+            {
+                name: "choice",
+                type: "rawlist",
+                choices: function(){
+                    var choiceArray = [];
+                    res.forEach(function(x){
+                        choiceArray.push(x.product_name);
+                    })
+                    return choiceArray;
+                },
+                message: "Which item would you like to purchase?"
+            },
+            {
+                name: "quantity",
+                type: "input",
+                message: "How many do you want?" 
+            }
+        ])
+        .then(function(answer){
+            var choseItem;
+            res.forEach(function(y){
+                if(y.product_name === answer.choice){
+                    choseItem = y;
+                }
+            })
+            //console.log(choseItem);
+            if(choseItem.stock_quantity > parseInt(answer.quantity)){
+                //console.log(answer.quantity);
+                var quantityLeft;
+                quantityLeft = choseItem.stock_quantity - answer.quantity;
+                //console.log(quantityLeft);
+                connection.query(
+                    "UPDATE products SET ? WHERE ?",
+                    [
+                        {
+                            stock_quantity: quantityLeft
+                        },
+                        {
+                            product_name: answer.choice
+                        }
+                    ],
+                    function(err,res){
+                        if(err) throw err;
+                        console.log(`You've spent ${choseItem.price * answer.quantity} dollars on ${choseItem.product_name}`);
+                    }
+                )
+            }
+            else {
+                console.log("Insufficient Quantity! Please choose a different item.")
+            }
+        })
+    })
 }
